@@ -8,17 +8,27 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly authService: AuthService,
-    ) {}
+  ) {}
 
-  @Get()
-  @UseGuards(AuthGuard('google'))
-  async getHello() {
-    return this.appService.getHello();
-  }
+  // @Get()
+  // @UseGuards(AuthGuard('google'))
+  // async getHello() {
+  //   return this.appService.getHello();
+  // }
 
   @Get('auth/google/callback')
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req) {
     return this.authService.googleLogin(req);
+  }
+
+  // @Get()
+  // @UseGuards(AuthGuard('outlook'))
+  // outlookAuth() {}
+
+  @Get('/auth/outlook/callback')
+  @UseGuards(AuthGuard('outlook'))
+  outlookAuthRedirect(@Req() req) {
+    return this.authService.outlookLogin(req);
   }
 }

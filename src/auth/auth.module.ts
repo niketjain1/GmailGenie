@@ -5,10 +5,8 @@ import { OutlookStrategy } from './outlook.strategy';
 import { AuthService } from './auth.service';
 
 @Module({
-  imports: [
-    PassportModule.register({ defaultStrategy: 'google' }),
-  ],
-  providers: [GoogleStrategy, AuthService],
+  imports: [PassportModule],
+  providers: [GoogleStrategy, AuthService, OutlookStrategy],
   exports: [AuthService]
 })
 export class AuthModule {}
