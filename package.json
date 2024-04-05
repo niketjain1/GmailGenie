@@ -26,6 +26,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "googleapis": "^134.0.0",
+    "openai": "^4.32.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-outlook": "^3.0.0",
