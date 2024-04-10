@@ -1,24 +1,14 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { AuthService } from './auth/auth.service';
+import { QueueService } from './queue/queue.service';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private readonly authService: AuthService,
-    ) {}
-
-  @Get()
-  @UseGuards(AuthGuard('google'))
-  async getHello() {
-    return this.appService.getHello();
-  }
+  constructor(private readonly queueService: QueueService) {}
 
   @Get('auth/google/callback')
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req);
+    this.queueService.addProcessEmailsJob(req.user.accessToken);
   }
 }
