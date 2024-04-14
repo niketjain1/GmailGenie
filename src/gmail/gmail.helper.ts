@@ -3,6 +3,7 @@ import { Auth, gmail_v1, google } from 'googleapis';
 import OpenAI from 'openai';
 import { z } from 'zod';
 const base64url = require('base64url');
+import Instructor from '@instructor-ai/instructor';
 
 @Injectable()
 export class GmailHelper {
@@ -143,11 +144,25 @@ export class GmailHelper {
   };
 
   private generateEmailResponse = async (emailBody: string) => {
-    const completion = await this.openai.chat.completions.create({
+    const emailSchema = z.object({
+      shouldSendEmail: z.boolean().describe('Should the email be sent?'),
+      emailContent: z.object({
+        subject: z.string().describe('The subject of the email'),
+        body: z.string().describe('The body of the email'),
+      }),
+    });
+
+    const client = Instructor({
+      client: this.openai,
+      mode: 'TOOLS',
+    });
+
+    const response = await client.chat.completions.create({
       messages: [
         {
           role: 'system',
-          content: `You are an ai email assistant that performs 2 tasks for the give email message ${emailBody}
+          content: `You are an ai email assistant that sets shouldSendEmail flag true only if when it is a marketing email campaign
+          and performs 2 tasks for the given email message ${emailBody}
       1. Categorizing the email based on the content and assign a label as follows -
         a. Interested
         b. Not Interested
@@ -160,11 +175,15 @@ export class GmailHelper {
         },
       ],
       model: 'gpt-3.5-turbo',
+      response_model: {
+        schema: emailSchema,
+        name: 'emailResponse',
+      },
     });
+
     // console.log('ai response - ');
-    // console.log(completion.choices[0].message);
-    const contentAsString = String(completion.choices[0].message.content);
-    return contentAsString;
+    // console.log(response);
+    return response;
   };
 
   async getEmailDetails(emailId: string, access_token: string) {
@@ -235,8 +254,8 @@ export class GmailHelper {
           await this.fetchEmailDetails(message.id);
         const emailResponse = await this.generateEmailResponse(body);
 
-        const email = this.parseEmail(emailResponse);
-        console.log(email);
+        // const email = this.parseEmail(emailResponse);
+        // console.log(email);
 
         this.sendEmail(subject, email.body, senderEmail, threadId);
       }
