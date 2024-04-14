@@ -35,6 +35,7 @@ export class GmailHelper {
     subject: string;
     body: string;
     threadId: string;
+    messageId: string;
   }> => {
     const response = await this.gmail.users.messages.get({
       userId: 'me',
@@ -63,11 +64,18 @@ export class GmailHelper {
     }
     console.log('parsed response');
     console.log({ senderEmail, subject, emailBody });
+    const messageId =
+      headers.find((header) => header.name.toLowerCase() === 'message-id')
+        ?.value || '';
+
+    // console.log('message id: ', messageId);
+
     return {
       senderEmail,
       subject,
       body: emailBody,
       threadId: response.data.threadId,
+      messageId: messageId,
     };
   };
 
@@ -76,6 +84,7 @@ export class GmailHelper {
     from: string,
     subject: string,
     message: string,
+    messageId: string,
   ) => {
     const str = [
       'Content-Type: text/plain; charset="UTF-8"\n',
@@ -84,8 +93,8 @@ export class GmailHelper {
       `to: ${to}\n`,
       `from: ${from}\n`,
       `subject: ${subject}\n`,
-      `References: <CAONyCUGK6mQvEszYFyNqSqvD2+6RXaD-hRoNNtZBzUKyzTef=w@mail.gmail.com>\n`,
-      `In-Reply-To: <CAONyCUGK6mQvEszYFyNqSqvD2+6RXaD-hRoNNtZBzUKyzTef=w@mail.gmail.com>\n`,
+      `References: ${messageId}\n`,
+      `In-Reply-To: ${messageId}\n`,
       message,
     ].join('');
 
@@ -110,12 +119,14 @@ export class GmailHelper {
     body: string,
     senderEmail: string,
     threadId: string,
+    messageId: string,
   ) => {
     const raw = this.makeBody(
       senderEmail,
       'niket.testing1@gmail.com',
       subject,
       body,
+      messageId,
     );
     try {
       const response = await this.gmail.users.messages.send({
@@ -250,14 +261,26 @@ export class GmailHelper {
       for (const message of response.data.messages) {
         console.log('logging message');
         console.log(message);
-        const { senderEmail, subject, body, threadId } =
+        const { senderEmail, subject, body, threadId, messageId } =
           await this.fetchEmailDetails(message.id);
+
         const emailResponse = await this.generateEmailResponse(body);
 
         // const email = this.parseEmail(emailResponse);
         // console.log(email);
 
-        this.sendEmail(subject, email.body, senderEmail, threadId);
+        // console.log('email response');
+        // console.log(emailResponse);
+
+        if (emailResponse.shouldSendEmail) {
+          this.sendEmail(
+            subject,
+            emailResponse.emailContent.body,
+            senderEmail,
+            threadId,
+            messageId,
+          );
+        }
       }
     } catch (error) {
       console.error(`Error processing emails: ${error}`);
