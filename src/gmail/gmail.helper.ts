@@ -156,7 +156,7 @@ export class GmailHelper {
 
   private generateEmailResponse = async (emailBody: string) => {
     const emailSchema = z.object({
-      shouldSendEmail: z.boolean().describe('Should the email be sent?'),
+      shouldSendEmail: z.boolean(),
       emailContent: z.object({
         subject: z.string().describe('The subject of the email'),
         body: z.string().describe('The body of the email'),
@@ -172,16 +172,14 @@ export class GmailHelper {
       messages: [
         {
           role: 'system',
-          content: `You are an ai email assistant that sets shouldSendEmail flag true only if when it is a marketing email campaign
-          and performs 2 tasks for the given email message ${emailBody}
-      1. Categorizing the email based on the content and assign a label as follows -
-        a. Interested
-        b. Not Interested
-        c. More information
-
-      2. Suggest an appropriate response and create a draft email based on the content of the email and send out a reply. For example -
-      a. If the email mentions they are interested to know more, your reply should ask them if they are willing to hop on to a demo call by suggesting a time.
-
+          content: `
+            You are an ai email assistant performs 2 tasks for the given email message ${emailBody}
+            1) Set the flag shouldSendEmail to true if it the content of the given email is related to marketing campaign feedback else 
+            set it false
+            2) Suggest an appropriate response and create a draft email (subject and body) based on the content of the email. For example -
+              a. If the email mentions they are interested to know more, your reply should ask them if they are willing 
+              to hop on to a demo call by suggesting a time.
+              b. If the email mentions not interested right now, your reply should be to give their valuable feedback etc.
       `,
         },
       ],
@@ -194,6 +192,10 @@ export class GmailHelper {
 
     // console.log('ai response - ');
     // console.log(response);
+    response.emailContent.body = response.emailContent.body.replace(
+      '[Your Name]',
+      'Niket',
+    );
     return response;
   };
 
