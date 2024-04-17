@@ -152,7 +152,7 @@ export class GmailHelper {
 
     const client = Instructor({
       client: this.openai,
-      mode: 'TOOLS',
+      mode: 'FUNCTIONS',
     });
 
     const response = await client.chat.completions.create({
@@ -160,13 +160,13 @@ export class GmailHelper {
         {
           role: 'system',
           content: `
-            You are an ai email assistant performs 2 tasks for the given email message ${emailBody}
-            1) Set the flag shouldSendEmail to true if it the content of the given email is related to marketing campaign feedback else 
-            set it false
-            2) Suggest an appropriate response and create a draft email (subject and body) based on the content of the email. For example -
-              a. If the email mentions they are interested to know more, your reply should ask them if they are willing 
-              to hop on to a demo call by suggesting a time.
-              b. If the email mentions not interested right now, your reply should be to give their valuable feedback etc.
+          You are a marketing feedback generating email ai assistant that performs the following task for the given email message ${emailBody}
+          1) sets the shouldSendEmail only true if it is a marketing feedback email else set it as false
+          2) Suggest an appropriate response and create a draft email (subject and body) based on the content of the email.
+          For example -
+            a. If the email mentions they are interested to know more, your reply should ask them if they are willing 
+            to hop on to a demo call by suggesting a time.
+            b. If the email mentions not interested right now, your reply should be to give their valuable feedback etc.
       `,
         },
       ],
@@ -244,7 +244,7 @@ export class GmailHelper {
     try {
       const response = await this.gmail.users.messages.list({
         userId: 'me',
-        maxResults: 1,
+        maxResults: 2,
       });
       console.log(response);
       for (const message of response.data.messages) {
