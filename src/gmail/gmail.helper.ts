@@ -160,13 +160,21 @@ export class GmailHelper {
         {
           role: 'system',
           content: `
-          You are a marketing feedback generating email ai assistant that performs the following task for the given email message ${emailBody}
-          1) sets the shouldSendEmail only true if it is a marketing feedback email else set it as false
-          2) Suggest an appropriate response and create a draft email (subject and body) based on the content of the email.
-          For example -
-            a. If the email mentions they are interested to know more, your reply should ask them if they are willing 
-            to hop on to a demo call by suggesting a time.
-            b. If the email mentions not interested right now, your reply should be to give their valuable feedback etc.
+        You are a marketing feedback generating email AI assistant. For the given email message ${emailBody}, determine if it specifically pertains to marketing feedback.
+        If the email is related to seeking more information, showing interest in a product, or giving feedback about marketing content, set shouldSendEmail to true. 
+        Otherwise, set it to false.
+
+        Based on the email content:
+        - If it's a marketing feedback email:
+            1) Set shouldSendEmail to true.
+            2) Suggest an appropriate response and create a draft email with a subject and body.
+            Examples:
+              a. If the email mentions they are interested to know more, your reply should ask them if they are willing 
+              to hop on to a demo call by suggesting a time.
+              b. If the email mentions not interested right now, your reply should be to give their valuable feedback etc.
+        - If the email is not related to marketing feedback:
+            Set shouldSendEmail to false and do not generate an email draft.
+        For example, if the email message is a casual greeting like 'hello, how are you?', shouldSendEmail should be false.
       `,
         },
       ],
@@ -177,12 +185,11 @@ export class GmailHelper {
       },
     });
 
-    // console.log('ai response - ');
-    // console.log(response);
     response.emailContent.body = response.emailContent.body.replace(
       '[Your Name]',
       'Niket',
     );
+
     return response;
   };
 
