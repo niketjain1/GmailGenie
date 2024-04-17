@@ -101,19 +101,6 @@ export class GmailHelper {
     return base64url.fromBase64(Buffer.from(str).toString('base64'));
   };
 
-  // TODO: remove after using instructor to do the same
-  private parseEmail = (content: string) => {
-    const parts = content.split('Subject:');
-    const bodyStartIndex = parts[1].indexOf('\n\n');
-    const subject = parts[1].substring(0, bodyStartIndex).trim();
-    let body = parts[1]
-      .substring(bodyStartIndex)
-      .trim()
-      .replace('[Your Name]', 'Niket');
-
-    return { subject, body };
-  };
-
   private sendEmail = async (
     subject: string,
     body: string,
@@ -268,11 +255,8 @@ export class GmailHelper {
 
         const emailResponse = await this.generateEmailResponse(body);
 
-        // const email = this.parseEmail(emailResponse);
-        // console.log(email);
-
-        // console.log('email response');
-        // console.log(emailResponse);
+        console.log('email response');
+        console.log(emailResponse);
 
         if (emailResponse.shouldSendEmail) {
           this.sendEmail(
