@@ -42,10 +42,8 @@ export class GmailHelper {
       id: emailId,
       format: 'full',
     });
-    console.log('response data');
-    console.log(response.data);
+
     const { headers, parts, body } = response.data.payload;
-    console.log('headers: ', headers);
     const senderEmail =
       headers.find((header) => header.name.toLowerCase() === 'from')?.value ||
       'Unknown Sender';
@@ -121,33 +119,19 @@ export class GmailHelper {
         requestBody: {
           raw: raw,
           threadId: threadId,
-          // payload: {
-          //   headers: [
-          //     {
-          //       name: 'References',
-          //       value: threadId,
-          //     },
-          //     {
-          //       name: 'In-Reply-To',
-          //       value: senderEmail,
-          //     },
-          //   ],
-          // },
         },
       });
-      console.log(response.data);
     } catch (error) {
       console.error('Failed to send email: ', error);
     }
   };
 
+  // TODO: Fix the prompt to make it more generic email response
   private generateEmailResponse = async (emailBody: string) => {
     const emailSchema = z.object({
       shouldSendEmail: z.boolean(),
-      emailContent: z.object({
-        subject: z.string().describe('The subject of the email'),
-        body: z.string().describe('The body of the email'),
-      }),
+      emailContent: z.string().describe('The content of the email'),
+      labels: z.array(z.string()).describe('The labels of the email'),
     });
 
     const client = Instructor({
@@ -160,21 +144,27 @@ export class GmailHelper {
         {
           role: 'system',
           content: `
-        You are a marketing feedback generating email AI assistant. For the given email message ${emailBody}, determine if it specifically pertains to marketing feedback.
-        If the email is related to seeking more information, showing interest in a product, or giving feedback about marketing content, set shouldSendEmail to true. 
-        Otherwise, set it to false.
+       Input:
+    An email from a potential customer with the follwing content ${emailBody}.
 
-        Based on the email content:
-        - If it's a marketing feedback email:
-            1) Set shouldSendEmail to true.
-            2) Suggest an appropriate response and create a draft email with a subject and body.
-            Examples:
-              a. If the email mentions they are interested to know more, your reply should ask them if they are willing 
-              to hop on to a demo call by suggesting a time.
-              b. If the email mentions not interested right now, your reply should be to give their valuable feedback etc.
-        - If the email is not related to marketing feedback:
-            Set shouldSendEmail to false and do not generate an email draft.
-        For example, if the email message is a casual greeting like 'hello, how are you?', shouldSendEmail should be false.
+    Expected Analysis:
+
+    Identify the intent of the email and generate an appropriate response based on the following conditions:
+    
+    Response Logic:
+
+      - If the emaii seems to be spam or irrelevant or has gibberish response:
+          set the shouldSendEmail flag to false. Set the label as Other.
+      
+      - If the email conveys expressing interest in discussing the product and its use cases:
+        set the shouldSendEmail flag to true, and generate an appropriate response and set the response in emailContent. Set the label Interested accordingly.
+
+      - If the email does not express interest in the product:
+          set the shouldSendEmail flag to true and generate a response that ask the user for the feedback and set the response in emailContent. Set the label as Not Interested.
+    
+      - If the email does not provide enough information about the user's intent:
+          set the shouldSendEmail flag to true and generate a response that asks for more information. Set the label as More Information.
+
       `,
         },
       ],
@@ -185,7 +175,7 @@ export class GmailHelper {
       },
     });
 
-    response.emailContent.body = response.emailContent.body.replace(
+    response.emailContent = response.emailContent.replace(
       '[Your Name]',
       'Niket',
     );
@@ -251,12 +241,9 @@ export class GmailHelper {
     try {
       const response = await this.gmail.users.messages.list({
         userId: 'me',
-        maxResults: 2,
+        maxResults: 4,
       });
-      console.log(response);
       for (const message of response.data.messages) {
-        console.log('logging message');
-        console.log(message);
         const { senderEmail, subject, body, threadId, messageId } =
           await this.fetchEmailDetails(message.id);
 
@@ -265,15 +252,15 @@ export class GmailHelper {
         console.log('email response');
         console.log(emailResponse);
 
-        if (emailResponse.shouldSendEmail) {
-          this.sendEmail(
-            subject,
-            emailResponse.emailContent.body,
-            senderEmail,
-            threadId,
-            messageId,
-          );
-        }
+        // if (emailResponse.shouldSendEmail) {
+        //   this.sendEmail(
+        //     subject,
+        //     emailResponse.emailContent.body,
+        //     senderEmail,
+        //     threadId,
+        //     messageId,
+        //   );
+        // }
       }
     } catch (error) {
       console.error(`Error processing emails: ${error}`);
