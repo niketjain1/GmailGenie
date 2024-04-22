@@ -1,14 +1,15 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
-import { AuthService } from 'src/auth/auth.service';
+import { GmailHelper } from 'src/gmail/gmail.helper';
 
 @Processor('processEmailsQueue')
-export class GmailConsumer {
-  constructor(private readonly authService: AuthService) {}
+export class QueueConsumer {
+  constructor(private readonly gmailHelper: GmailHelper) {}
 
   @Process()
-  async handleProcessEmailsJob(job: Job<{ accessToken: string }>) {
+  async handleProcessEmailsJob(job: Job) {
+    console.log(`Processing Job ${job.id}`);
     console.log(JSON.stringify(job.data));
-    await this.authService.processEmails(job.data.accessToken);
+    await this.gmailHelper.processEmails(job.data.accessToken);
   }
 }
