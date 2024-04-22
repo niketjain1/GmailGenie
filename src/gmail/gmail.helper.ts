@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Auth, gmail_v1, google } from 'googleapis';
 import OpenAI from 'openai';
 import { z } from 'zod';
@@ -136,7 +136,7 @@ export class GmailHelper {
         },
       });
     } catch (error) {
-      console.error('Failed to send email: ', error);
+      this.logger.error('Failed to send email: ', error);
     }
   };
 
@@ -180,21 +180,32 @@ export class GmailHelper {
           set the shouldSendEmail flag to true and generate a response that asks for more information. Set the label as More Information.
 
       `,
+          },
+        ],
+        model: 'gpt-3.5-turbo',
+        response_model: {
+          schema: emailSchema,
+          name: 'emailResponse',
         },
-      ],
-      model: 'gpt-3.5-turbo',
-      response_model: {
-        schema: emailSchema,
-        name: 'emailResponse',
-      },
-    });
+      });
 
-    response.emailContent = response.emailContent.replace(
-      '[Your Name]',
-      'Niket',
-    );
+      if (!response) {
+        this.logger.warn(
+          'Failed to generate email response due to an invalid API response',
+        );
+        return null;
+      }
 
-    return response;
+      response.emailContent = response.emailContent.replace(
+        '[Your Name]',
+        'Niket',
+      );
+
+      return response;
+    } catch (error) {
+      this.logger.error(`Error generating email response: ${error}`);
+      throw error;
+    }
   };
 
   async getEmailDetails(emailId: string, access_token: string) {
@@ -243,15 +254,13 @@ export class GmailHelper {
 
       return { senderEmail, subject, body };
     } catch (error) {
-      console.error(`Failed to fetch email details: ${error}`);
+      this.logger.error(`Failed to fetch email details: ${error}`);
       throw error;
     }
   }
 
   public processEmails = async (access_token: string) => {
-    console.log(access_token);
     await this.initializeGmailClient(access_token);
-
     try {
       const response = await this.gmail.users.messages.list({
         userId: 'me',
@@ -288,7 +297,8 @@ export class GmailHelper {
         }
       }
     } catch (error) {
-      console.error(`Error processing emails: ${error}`);
+      this.logger.error(`Error processing emails: ${error}`);
+      throw error;
     }
   };
 }
