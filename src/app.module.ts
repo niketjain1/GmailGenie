@@ -6,15 +6,17 @@ import { QueueService } from './queue/queue.service';
 import { BullModule } from '@nestjs/bull';
 import { QueueConsumer } from './queue/queue.consumer';
 import { GmailHelper } from './gmail/gmail.helper';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     ConfigModule.forRoot({
       envFilePath: ['.env.local'],
     }),
     BullModule.forRoot({
       redis: {
-        host: '0.0.0.0',
+        host: process.env.REDIS_HOST,
         port: 6379,
       },
     }),
