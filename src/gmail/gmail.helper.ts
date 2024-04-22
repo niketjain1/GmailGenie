@@ -36,6 +36,7 @@ export class GmailHelper {
     body: string;
     threadId: string;
     messageId: string;
+    isUnreadEmail: boolean;
   }> => {
     const response = await this.gmail.users.messages.get({
       userId: 'me',
@@ -43,6 +44,17 @@ export class GmailHelper {
       format: 'full',
     });
 
+    const isUnreadEmail = response.data.labelIds.includes('UNREAD');
+    if (!isUnreadEmail) {
+      return {
+        senderEmail: '',
+        subject: '',
+        body: '',
+        threadId: '',
+        messageId: '',
+        isUnreadEmail: false,
+      };
+    }
     const { headers, parts, body } = response.data.payload;
     const senderEmail =
       headers.find((header) => header.name.toLowerCase() === 'from')?.value ||
@@ -74,10 +86,11 @@ export class GmailHelper {
       body: emailBody,
       threadId: response.data.threadId,
       messageId: messageId,
+      isUnreadEmail: true,
     };
   };
 
-  private makeBody = (
+  private makeBody = async (
     to: string,
     from: string,
     subject: string,
@@ -93,10 +106,11 @@ export class GmailHelper {
       `subject: ${subject}\n`,
       `References: ${messageId}\n`,
       `In-Reply-To: ${messageId}\n`,
+      '\n',
       message,
     ].join('');
 
-    return base64url.fromBase64(Buffer.from(str).toString('base64'));
+    return await base64url.fromBase64(Buffer.from(str).toString('base64'));
   };
 
   private sendEmail = async (
@@ -106,7 +120,7 @@ export class GmailHelper {
     threadId: string,
     messageId: string,
   ) => {
-    const raw = this.makeBody(
+    const raw = await this.makeBody(
       senderEmail,
       'niket.testing1@gmail.com',
       subject,
@@ -241,26 +255,37 @@ export class GmailHelper {
     try {
       const response = await this.gmail.users.messages.list({
         userId: 'me',
-        maxResults: 4,
+        maxResults: 5,
       });
+
       for (const message of response.data.messages) {
-        const { senderEmail, subject, body, threadId, messageId } =
-          await this.fetchEmailDetails(message.id);
+        const {
+          senderEmail,
+          subject,
+          body,
+          threadId,
+          messageId,
+          isUnreadEmail,
+        } = await this.fetchEmailDetails(message.id);
 
-        const emailResponse = await this.generateEmailResponse(body);
+        if (isUnreadEmail) {
+          const emailResponse = await this.generateEmailResponse(body);
 
-        console.log('email response');
-        console.log(emailResponse);
+          console.log('email response');
+          console.log(emailResponse);
 
-        // if (emailResponse.shouldSendEmail) {
-        //   this.sendEmail(
-        //     subject,
-        //     emailResponse.emailContent.body,
-        //     senderEmail,
-        //     threadId,
-        //     messageId,
-        //   );
-        // }
+          console.log(emailResponse.emailContent);
+
+          if (emailResponse.shouldSendEmail) {
+            await this.sendEmail(
+              subject,
+              emailResponse.emailContent,
+              senderEmail,
+              threadId,
+              messageId,
+            );
+          }
+        }
       }
     } catch (error) {
       console.error(`Error processing emails: ${error}`);
