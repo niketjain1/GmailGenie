@@ -1,73 +1,76 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Email-AI-Assistant
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Email-AI-Assistant is a robust backend application designed to leverage the power of NestJS, Google's Gmail API, OpenAI, and BullMQ with Redis to automate email processing. This application simplifies managing and responding to emails for professionals and businesses, featuring automatic authentication via Google, retrieval of recent emails, and AI-driven response generation. The scheduler, powered by BullMQ, runs tasks every minute, ensuring prompt email interactions and operations.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
+- **Google OAuth Integration**: Secure user authentication via Google accounts.
+- **Gmail Integration**: Read and respond to emails within the same thread directly through the user's Gmail account.
+- **OpenAI Integration**: Automatically categorizes emails and generates suitable responses based on content context.
+- **Automated Email Processing**: Tasks are scheduled and managed every minute using BullMQ and Redis.
 
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Prerequisites
+Before you begin, ensure you have met the following requirements:
+
+- Node.js (v14.x or newer)
+- Docker (for Redis and optional deployment)
+- Google Cloud Platform account with Gmail API and OAuth2 enabled
 
 ## Installation
+Follow these steps to get your development env running:
 
+1. Clone the repository
 ```bash
-$ yarn install
+$ git clone https://github.com/niketjain1/email-ai-assistant.git
+$ cd email-ai-assistant
 ```
 
-## Running the app
-
+2. Install dependecies
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+$ npm install
 ```
 
-## Test
+3. Set up environment variables
+Create a `.env` file in the root directory and fill it with the necessary credentials:
 
 ```bash
-# unit tests
-$ yarn run test
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+OPENAI_API_KEY=your-openai-api-key
+REDIS_HOST=localhost
+REDIS_PORT=6379
+```
+  ---
+  **NOTE**
+  
+  To get the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, go to google developer console and get the oath credentials
+  
+  ---
 
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+4. Run Redis using Docker (adjust if you have a different setup)
+```bash
+docker-compose up -d redis
 ```
 
-## Support
+## Usage
+How to use the application:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. Start the server
+```bash
+$ npm run start
 
-## Stay in touch
+or 
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+$ yarn start
+```
 
-## License
+2. Access the API
+- Navigate to http://localhost:3000/auth/google/callback to authenticate via Google.
+- After authentication, the app will read the incoming emails every 1 minute. To test the app send emails on the email id authenticated
 
-Nest is [MIT licensed](LICENSE).
+#### Tech stack used:
+- NestJS: Chosen for its robustness and scalability in building server-side applications.
+- OpenAI: Provides advanced AI capabilities for analyzing and responding to email content.
+- Redis & BullMQ: Used for managing job queues and ensuring timely task execution.
+
+
