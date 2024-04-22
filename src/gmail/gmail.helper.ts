@@ -167,10 +167,10 @@ export class GmailHelper {
     
     Response Logic:
 
-      - If the emaii seems to be spam or irrelevant or has gibberish response:
+      - If the emaii seems to be spam or irrelevant to the product or has gibberish response:
           set the shouldSendEmail flag to false. Set the label as Other.
       
-      - If the email conveys expressing interest in discussing the product and its use cases:
+      - If the email conveys only expressing interest in discussing the product and its use cases:
         set the shouldSendEmail flag to true, and generate an appropriate response and set the response in emailContent. Set the label Interested accordingly.
 
       - If the email does not express interest in the product:
