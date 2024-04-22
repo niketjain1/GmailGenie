@@ -10,15 +10,20 @@ export class GmailHelper {
   private oauth2Client: Auth.OAuth2Client;
   private gmail: gmail_v1.Gmail;
   private openai: OpenAI;
+  private logger = new Logger(GmailHelper.name);
 
   constructor() {
+    this.initializeOAuthClient();
+    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
+  private initializeOAuthClient = () => {
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
       'http://localhost:3000/auth/google/callback',
     );
-    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
+  };
 
   private initializeGmailClient = (access_token: string) => {
     this.oauth2Client.setCredentials({
@@ -44,7 +49,9 @@ export class GmailHelper {
       format: 'full',
     });
 
-    const isUnreadEmail = response.data.labelIds.includes('UNREAD');
+    const labels = response.data.labelIds || [];
+    const isUnreadEmail = labels.includes('UNREAD');
+
     if (!isUnreadEmail) {
       return {
         senderEmail: '',
@@ -148,16 +155,17 @@ export class GmailHelper {
       labels: z.array(z.string()).describe('The labels of the email'),
     });
 
-    const client = Instructor({
-      client: this.openai,
-      mode: 'FUNCTIONS',
-    });
+    try {
+      const client = Instructor({
+        client: this.openai,
+        mode: 'FUNCTIONS',
+      });
 
-    const response = await client.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: `
+      const response = await client.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: `
        Input:
     An email from a potential customer with the follwing content ${emailBody}.
 
